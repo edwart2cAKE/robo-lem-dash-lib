@@ -10,7 +10,7 @@ public:
    * 
    * @param port The port number where the IMU is connected.
    */
-  scaledIMU(int port);
+  scaledIMU(int port, double scaling);
 
   /**
    * @brief Get the current rotation value from the IMU.

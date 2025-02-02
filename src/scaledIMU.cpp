@@ -4,14 +4,14 @@
 class scaledIMU : public pros::IMU {
 
 public:
-  scaledIMU(int port);
+  scaledIMU(int port, double scaling);
   double get_rotation();
   double IMUscaling;
   double IMUoffset;
 };
 
-scaledIMU::scaledIMU(int port) : pros::IMU(port) {
-  IMUscaling = 1;
+scaledIMU::scaledIMU(int port, double scaling) : pros::IMU(port) {
+  IMUscaling = scaling;
   IMUoffset = 0;
 }
 

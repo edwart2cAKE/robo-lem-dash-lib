@@ -2,6 +2,7 @@
 #include "autos.h"
 #include "pros/abstract_motor.hpp"
 #include "pros/misc.h"
+#include "pros/motors.h"
 #include "pros/rtos.hpp"
 #include "subsystems.h"
 
@@ -14,6 +15,7 @@
 
 // add autos
 rd::Selector selector({{"PID lateral", &pid_lateral_test},
+                       {"PID single lateral", &pid_single_lateral_test},
                        {"PID angular", &pid_angular_test},
                        {"PID total", &pid_suite_test},
                        {"Auto Skills", &auto_skills}});
@@ -37,7 +39,8 @@ void initialize() {
 
   // set up intake and hook
   intake.set_brake_mode(pros::MotorBrake::brake);
-  hook.set_brake_mode(pros::MotorBrake::brake);
+
+  console.focus();
 
   // print position to brain screen
   pros::Task screen_task([&]() {
@@ -76,9 +79,8 @@ void disabled() {}
  * starts.
  */
 void competition_initialize() {
-  // Focus auton selector on screen
+  console.focus();
   chassis.setBrakeMode(pros::E_MOTOR_BRAKE_HOLD);
-  selector.focus();
 }
 
 /**
@@ -94,7 +96,8 @@ void competition_initialize() {
  */
 void autonomous() {
   // Run the selected autonomous function
-  selector.run_auton();
+  chassis.setBrakeMode(pros::E_MOTOR_BRAKE_HOLD);
+  auto_skills();
 }
 
 /**
@@ -110,28 +113,34 @@ void autonomous() {
  * operator control task will be stopped. Re-enabling the robot will restart the
  * task, not resume it from where it left off.
  */
+bool doing_auto = false;
 void opcontrol() {
+  chassis.setBrakeMode(pros::E_MOTOR_BRAKE_COAST);
   while (1) {
-    // intake control (R1 / R2)
-    int intake_movement = master.get_digital(pros::E_CONTROLLER_DIGITAL_R2) -
-                          master.get_digital(pros::E_CONTROLLER_DIGITAL_R1);
-    intake.move(127 * intake_movement);
+    if (!doing_auto) {
+      // intake control (R1 / R2)
+      int intake_movement = master.get_digital(pros::E_CONTROLLER_DIGITAL_R2) -
+                            master.get_digital(pros::E_CONTROLLER_DIGITAL_R1);
+      intake.move(127 * intake_movement);
 
-    // hook control (L1 / L2)
-    int hook_movement = master.get_digital(pros::E_CONTROLLER_DIGITAL_L2) -
-                        master.get_digital(pros::E_CONTROLLER_DIGITAL_L1);
-    hook.move(127 * intake_movement);
+      // mogo control (down)
+      if (master.get_digital_new_press(DIGITAL_DOWN)) {
+        mogo_state = !mogo_state;
+        mogo.set_value(mogo_state);
+      }
 
-    // mogo control (down)
-    if (master.get_digital_new_press(DIGITAL_DOWN)) {
-      mogo_state = !mogo_state;
-      mogo.set_value(mogo_state);
+      // chassis control (tank drive)
+      int left = master.get_analog(ANALOG_LEFT_Y);
+      int right = master.get_analog(ANALOG_RIGHT_Y);
+      chassis.tank(left, right, false);
     }
 
-    // chassis control (tank drive)
-    int left = master.get_analog(ANALOG_LEFT_Y);
-    int right = master.get_analog(ANALOG_RIGHT_Y);
-    chassis.tank(left, right, false);
+    // macro and driver recovery
+    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT)) {
+      auto_skills_driver();
+      chassis.setBrakeMode(pros::E_MOTOR_BRAKE_COAST);
+    }
+      
 
     // delay
     pros::delay(20);
