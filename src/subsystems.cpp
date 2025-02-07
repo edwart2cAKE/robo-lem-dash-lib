@@ -1,36 +1,36 @@
 // ports and subsystems are defined here
 #include "lemlib/chassis/trackingWheel.hpp"
 #include "main.h" // IWYU pragma: keep
+
+#if 1
+#include "scaledIMU.cpp"
+#else
 #include "scaledIMU.h"
+#endif
 
 // port numbers
 #define left_drive_ports                                                       \
-  { -5, -6, -20 }
+  { -5, -6, -19 }
 #define right_drive_ports                                                      \
-  { 2, 3, 4 }
-#define intake_port -1
+  { 13, 14, 15 }
+#define intake_port -12
+#define lift_ports {20} // only one motor
 #define mogo_port 3
 #define imu_port 7
 
 pros::MotorGroup left_side(left_drive_ports);   // left motors on ports 1, 2, 3
 pros::MotorGroup right_side(right_drive_ports); // right motors on ports 4, 5, 6
 
-// get the chassis velocity
-double get_chassis_velocity() {
-  return (left_side.get_actual_velocity() + right_side.get_actual_velocity()) /
-         2;
-}
-
 // drivetrain settings
 lemlib::Drivetrain drivetrain(&left_side,                 // left motor group
                               &right_side,                // right motor group
-                              11.25,                      // 10 inch track width
-                              lemlib::Omniwheel::OLD_325, // using new 4" omnis
-                              450, // drivetrain rpm is 360
+                              11.25,                      // 11.25 inch track width
+                              lemlib::Omniwheel::OLD_325, // using 3.25 omnis
+                              450, // drivetrain rpm is 450
                               2    // horizontal drift is 2 (for now)
 );
 
-scaledIMU imu(imu_port, 360.0 / 180); // inertial sensor
+scaledIMU imu(imu_port, 20); // inertial sensor
 
 lemlib::OdomSensors sensors(
     nullptr, // vertical tracking wheel 1, set to null
@@ -55,15 +55,15 @@ lemlib::ControllerSettings
     );
 // angular PID controller
 lemlib::ControllerSettings
-    angular_controller(2, // proportional gain (kP)
-                       0.01,   // integral gain (kI)
-                       12,  // derivative gain (kD)
-                       3,   // anti windup
-                       5,   // small error range, in degrees
-                       100, // small error range timeout, in milliseconds
-                       3,   // large error range, in degrees
-                       500, // large error range timeout, in milliseconds
-                       20   // maximum acceleration (slew)
+    angular_controller(2,    // proportional gain (kP)
+                       0.01, // integral gain (kI)
+                       12,   // derivative gain (kD)
+                       3,    // anti windup
+                       5,    // small error range, in degrees
+                       100,  // small error range timeout, in milliseconds
+                       3,    // large error range, in degrees
+                       500,  // large error range timeout, in milliseconds
+                       20    // maximum acceleration (slew)
     );
 
 // create drive curve settings
@@ -77,7 +77,10 @@ lemlib::Chassis chassis(drivetrain, lateral_controller, angular_controller,
                         sensors, &drive_curve, &turn_curve);
 
 // intake
-pros::Motor intake(intake_port,pros::v5::MotorGears::green,pros::v5::MotorEncoderUnits::degrees); // intake motor
+pros::Motor intake(intake_port, pros::v5::MotorGears::green,
+                   pros::v5::MotorEncoderUnits::degrees); // intake motor
+
+
 
 // mogo
 pros::adi::DigitalOut mogo(mogo_port, LOW);

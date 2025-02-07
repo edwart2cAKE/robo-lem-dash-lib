@@ -1,21 +1,6 @@
 #include "main.h" // IWYU pragma: keep
 #include "subsystems.h"
 
-void pid_single_lateral(int distance) {
-  // move the robot to a specific point
-  chassis.setPose(0, 0, 0);
-  chassis.moveToPoint(0, 10, 10000, {.forwards = (distance > 0)});
-
-  // log the robot's velocity every 10 ms
-  // format: (time, velocity)
-  while (chassis.isInMotion()) {
-    printf("(%d, %f),", pros::millis(), get_chassis_velocity());
-    pros::delay(10);
-  }
-}
-
-void pid_single_lateral_test() { pid_single_lateral(20); }
-
 void pid_lateral_test() {
   chassis.moveToPoint(0, 10, 1e4);
   chassis.moveToPoint(0, -10, 1e4, {.forwards = false});

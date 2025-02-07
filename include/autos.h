@@ -5,21 +5,11 @@
 extern lemlib::Chassis chassis;
 
 /**
- * Test the lateral PID controller by moving the robot to a specific point.
- *
- * @param distance The distance to move the robot.
- */
-void pid_single_lateral(int distance);
-
-/**
- * Test the lateral PID controller by moving the robot to a specific point.
- */
-void pid_single_lateral_test();
-
-/**
  * Test the lateral PID controller by moving the robot to various points.
  */
 void pid_lateral_test();
+
+void pid_single_lateral_test();
 
 /**
  * Test the angular PID controller by turning the robot to a specific heading.

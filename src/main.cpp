@@ -15,7 +15,6 @@
 
 // add autos
 rd::Selector selector({{"PID lateral", &pid_lateral_test},
-                       {"PID single lateral", &pid_single_lateral_test},
                        {"PID angular", &pid_angular_test},
                        {"PID total", &pid_suite_test},
                        {"Auto Skills", &auto_skills}});
