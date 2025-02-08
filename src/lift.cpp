@@ -1,53 +1,39 @@
+#include "lift.hpp"
 
-
-#include "lemlib/pid.hpp"
-#include "pros/motor_group.hpp"
-#include "pros/motor_group.hpp"
-#include "pros/rotation.hpp"
-class Lift {
-private:
-  pros::MotorGroup &m_motors;
-  pros::Rotation &m_rotation;
-  lemlib::PID m_pid;
-  enum State {
-    BOTTOM,
-    MIDDLE,
-    TOP,
-  };
-  State m_state;
-  float getTarget() const {
-    // return the target position for the given state
-    // TODO: make positions
-    switch (m_state) {
-    case BOTTOM:
-      return 0;
-    case MIDDLE:
-      return 0;
-    case TOP:
-      return 0;
-    }
-    return 0;
+// Private helper functions
+float Lift::getTarget() const {
+  switch (m_state) {
+    case BOTTOM: return 5;
+    case MIDDLE: return 40;
+    case TOP:    return 148;
   }
-  float getRotation() const { return m_rotation.get_position() / 100.0; }
-  float getError() const { return getTarget() - getRotation(); }
-  void update() {
-    const float error = getError();
-    const float output = m_pid.update(error);
-    m_motors.move_voltage(output);
-  }
+  return 0;
+}
 
-public:
-  Lift(pros::MotorGroup &motors, pros::Rotation &rotation, lemlib::PID pid)
-      : m_motors(motors), m_rotation(rotation), m_pid(pid) {
-    m_state = BOTTOM;
-  }
+float Lift::getRotation() const { 
+  return m_rotation.get_position() / 100.0; 
+}
 
-  void goToTop() { m_state = TOP; }
-  void goToMiddle() { m_state = MIDDLE; }
-  void goToBottom() { m_state = BOTTOM; }
+float Lift::getError() const { 
+  float error = getTarget() - getRotation();
+  printf("Error: %f", error);
+  return error;
+}
 
-  void goDown() {
-    switch (m_state) {
+// Constructor
+Lift::Lift(pros::MotorGroup& motors, pros::Rotation& rotation, lemlib::PID pid)
+  : m_motors(motors), m_rotation(rotation), m_pid(pid)
+{
+  m_state = BOTTOM;
+}
+
+// Public member functions
+void Lift::goToTop() { m_state = TOP; }
+void Lift::goToMiddle() { m_state = MIDDLE; }
+void Lift::goToBottom() { m_state = BOTTOM; }
+
+void Lift::goDown() {
+  switch (m_state) {
     case TOP:
       goToMiddle();
       break;
@@ -56,10 +42,11 @@ public:
       break;
     case BOTTOM:
       break;
-    }
   }
-  void goUp() {
-    switch (m_state) {
+}
+
+void Lift::goUp() {
+  switch (m_state) {
     case TOP:
       break;
     case MIDDLE:
@@ -68,6 +55,11 @@ public:
     case BOTTOM:
       goToMiddle();
       break;
-    }
   }
-};
+}
+
+void Lift::update() {
+  const float error = getError();
+  const float output = m_pid.update(error);
+  m_motors.move_voltage(output);
+}

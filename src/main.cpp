@@ -6,6 +6,7 @@
 #include "pros/rtos.hpp"
 #include "subsystems.h"
 
+
 /**
  * A callback function for LLEMU's center button.
  *
@@ -39,10 +40,11 @@ void initialize() {
   // set up intake and hook
   intake.set_brake_mode(pros::MotorBrake::brake);
 
+
   console.focus();
 
   // print position to brain screen
-  pros::Task screen_task([&]() {
+  pros::Task update_task([&]() {
     while (true) {
       // clear screen
       console.clear();
@@ -54,6 +56,8 @@ void initialize() {
 
       // print comp status
       console.printf("Is Competition %f \n", is_comp);
+
+      
 
       // delay to save resources
       pros::delay(50);
@@ -116,30 +120,28 @@ bool doing_auto = false;
 void opcontrol() {
   chassis.setBrakeMode(pros::E_MOTOR_BRAKE_COAST);
   while (1) {
-    if (!doing_auto) {
-      // intake control (R1 / R2)
-      int intake_movement = master.get_digital(pros::E_CONTROLLER_DIGITAL_R2) -
-                            master.get_digital(pros::E_CONTROLLER_DIGITAL_R1);
-      intake.move(127 * intake_movement);
+    // intake control (R1 / R2)
+    int intake_movement = master.get_digital(pros::E_CONTROLLER_DIGITAL_R2) -
+                          master.get_digital(pros::E_CONTROLLER_DIGITAL_R1);
+    intake.move(127 * intake_movement);
 
-      // mogo control (down)
-      if (master.get_digital_new_press(DIGITAL_DOWN)) {
-        mogo_state = !mogo_state;
-        mogo.set_value(mogo_state);
-      }
-
-      // chassis control (tank drive)
-      int left = master.get_analog(ANALOG_LEFT_Y);
-      int right = master.get_analog(ANALOG_RIGHT_Y);
-      chassis.tank(left, right, false);
+    // mogo control (down)
+    if (master.get_digital_new_press(DIGITAL_DOWN)) {
+      mogo_state = !mogo_state;
+      mogo.set_value(mogo_state);
     }
 
-    // macro and driver recovery
-    if (master.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT)) {
-      auto_skills_driver();
-      chassis.setBrakeMode(pros::E_MOTOR_BRAKE_COAST);
-    }
-      
+    // lift control (L1 / L2)
+    if (master.get_digital_new_press(DIGITAL_L2)) {
+      lift.goUp();
+    } else if (master.get_digital_new_press(DIGITAL_L1)) {
+      lift.goDown();
+    } //*/
+
+    // chassis control (tank drive)
+    int left = master.get_analog(ANALOG_LEFT_Y);
+    int right = master.get_analog(ANALOG_RIGHT_Y);
+    chassis.tank(left, right, false);
 
     // delay
     pros::delay(20);

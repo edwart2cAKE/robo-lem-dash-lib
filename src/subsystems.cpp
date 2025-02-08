@@ -4,19 +4,19 @@
 #include "main.h" // IWYU pragma: keep
 #include "pros/motor_group.hpp"
 
-#if 1
-#include "scaledIMU.cpp"
+#if 0
 #include "lift.cpp"
+#include "scaledIMU.cpp"
 #else
+#include "lift.hpp"
 #include "scaledIMU.h"
-#include "lift.h"
 #endif
 
 // port numbers
 
 // drivetrain ports
 #define left_drive_ports                                                       \
-  { -5, -6, -19 }
+  { -5, -6, -16 }
 #define right_drive_ports                                                      \
   { 13, 14, 15 }
 
@@ -25,7 +25,7 @@
 
 // lift + rot sensor ports
 #define lift_ports                                                             \
-  { 20 } // only one motor
+  { 20, -19 }
 #define rot_sensor_port 10
 
 // mogo port (port C)
@@ -46,7 +46,7 @@ lemlib::Drivetrain drivetrain(&left_side,  // left motor group
                               2    // horizontal drift is 2 (for now)
 );
 
-scaledIMU imu(imu_port, 20); // inertial sensor
+scaledIMU imu(imu_port, 360/357.0); // inertial sensor
 
 lemlib::OdomSensors sensors(
     nullptr, // vertical tracking wheel 1, set to null
@@ -99,9 +99,14 @@ pros::Motor intake(intake_port, pros::v5::MotorGears::green,
 // lady brown
 lemlib::PID liftPID(5, 0, 0);
 
-pros::MotorGroup lift_motors(lift_ports); // lift motor group
+pros::MotorGroup lift_motors(lift_ports, pros::v5::MotorGears::ratio_18_to_1,
+                             pros::v5::MotorUnits::invalid); // lift motor group
 pros::Rotation lift_sensor(rot_sensor_port);
 Lift lift(lift_motors, lift_sensor, liftPID);
+pros::Task lift_task([]() {
+  lift.update();
+  pros::delay(20);
+});
 
 // mogo
 pros::adi::DigitalOut mogo(mogo_port, LOW);

@@ -1,5 +1,5 @@
-#ifndef LIFT_H
-#define LIFT_H
+#ifndef LIFT_HPP
+#define LIFT_HPP
 
 #include "lemlib/pid.hpp"
 #include "pros/motor_group.hpp"
@@ -19,15 +19,15 @@ private:
   float getTarget() const;
   float getRotation() const;
   float getError() const;
-  void update();
 
 public:
-  Lift(pros::MotorGroup &motors, pros::Rotation &rotation, lemlib::PID pid);
+  Lift(pros::MotorGroup& motors, pros::Rotation& rotation, lemlib::PID pid);
   void goToTop();
   void goToMiddle();
   void goToBottom();
   void goDown();
   void goUp();
+  void update();
 };
 
-#endif // LIFT_H
+#endif // LIFT_HPP
